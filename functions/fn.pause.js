@@ -11,7 +11,7 @@ _.fn.pause = function (duration, callback) {
 		if (typeof callback === 'function') {
 			window.setTimeout(function () {
 				callback.call(this);
-			}.bind(this), duration);
+			}.bind(this), duration || 500);
 		}
 	});
 };

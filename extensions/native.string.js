@@ -116,7 +116,9 @@ String.prototype.cookie = function (value, expire, path) {
 		});
 		return value ? decodeURIComponent(value) : undefined;
 	}
-};/**
+};
+
+/**
  * Creates a hash from a string.
  *
  * @since   1.0
@@ -146,6 +148,47 @@ String.prototype.hex2bin = function () {
 		bytes.push(parseInt(this.substr(i, 2), 16));
 	}
 	return String.fromCharCode.apply(String, bytes);	
+};
+
+/**
+ * Creates a different shade of a hexadecimal or RGB(a) color.
+ *
+ * @since   1.0
+ * @param   number  shade   The level of shading, as a decimal between 0 and 1
+ * @param   bool    darker  True to darken the color, false to lighten
+ * @return  string  Returns the shaded color
+ */
+String.prototype.shade = function (shade, darker) {
+	var col = this.replace(/\s*/g, '').replace(/^#?([a-f0-9])([a-f0-9])([a-f0-9])$/i, '#$1$1$2$2$3$3'),
+		dif = Math.round(shade * 256) * (darker ? -1 : 1),
+		rgb = col.match(new RegExp('^rgba?\\(\\*' +
+			'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+			'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+			'(\\d|[1-9]\\d|1\\d{2}|2[0-4][0-9]|25[0-5])' +
+			'(0|1|0?\\.\\d+)?' +
+			'\\)$', 'i')),
+		alp = !!rgb && rgb[4] !== null ? rgb[4] : null,
+		dec = !!rgb
+			? [ rgb[1], rgb[2], rgb[3] ]
+			: col.replace(/^#?([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])([a-f0-9][a-f0-9])/i, function () {
+				return [
+					parseInt(arguments[1], 16),
+					parseInt(arguments[2], 16),
+					parseInt(arguments[3], 16)
+				].join(',');
+			}).split(',');
+	dec = [
+		Math[darker ? 'max' : 'min'](parseInt(dec[0], 10) + dif, darker ? 0 : 255),
+		Math[darker ? 'max' : 'min'](parseInt(dec[1], 10) + dif, darker ? 0 : 255),
+		Math[darker ? 'max' : 'min'](parseInt(dec[2], 10) + dif, darker ? 0 : 255)
+	];
+	return !!rgb
+		? 'rgb' + (alp !== null ? 'a' : '')
+			+ '(' + dec.join(',') + (alp !== null ? ',' + alp : '') + ')'
+		: '#'
+			+ ('00' + dec[0].toString(16)).slice(-2)
+			+ ('00' + dec[1].toString(16)).slice(-2)
+			+ ('00' + dec[2].toString(16)).slice(-2);
 };
 
 /**

@@ -52,16 +52,15 @@ _.tween = function (options) {
 		prop,
 		start = options.start,
 		step = (new Date()).getTime(),
-		tween = this.plum.tween,
 		value,
 		frame = function () {
 			var style = {}, now = (new Date()).getTime() - step;
-			if (!tween.active) { return; }
+			if (!this.plum.tween.active) { return; }
 			if (now >= duration) {
 				elem.style(end);
 				complete.call(elem[0]);
-				tween.active = false;
-				if (tween.queue) {
+				this.plum.tween.active = false;
+				if (this.plum.tween.queue) {
 					elem.go();
 				}
 				return;
@@ -84,12 +83,15 @@ _.tween = function (options) {
 			}
 			elem.style(style);
 			window.requestAnimationFrame(frame);
-		};
+		}.bind(this);
 
 	// If all properties are identical, the animation has already completed
 	// and there's no reason to run it.
-	tween.active = true;
-	for (prop in end) { if (start[prop] !== end[prop]) { done = false; } }
+	this.plum.tween.active = true;
+	for (prop in end) { {
+		end[prop] = /[-\+]/.test(end[prop][0]) ? start[prop] + parseFloat(end[prop]) : end[prop];
+		if (start[prop] !== end[prop]) { done = false; } }
+	}
 	if (done) { duration = 0; }
 
 	// Begin the animation.

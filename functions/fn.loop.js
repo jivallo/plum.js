@@ -9,11 +9,11 @@
  * is returned.
  *
  * @since   1.0
- * @param   mixed  loop  The loop status
+ * @param   mixed  status  The loop status
  * @return  mixed  Returns the loop count or a Plum object
  */
-_.fn.loop = function (loop) {
+_.fn.loop = function (status) {
 	return loop !== undefined
-		? this.each(function () { this.plum.tween.loop = loop; })
+		? this.each(function () { this.plum.tween.loop = status; })
 		: this[0].plum.tween.loop;
 };

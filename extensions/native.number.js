@@ -6,19 +6,20 @@
  * @return  string  The formatted time string
  */
 Number.prototype.time = function (options) {
-	var time = new Date(Math.ceil(this * 1000));
-	options = _.merge({
-		hours: false,
-		minutes: true,
-		seconds: true,
-		separator: ':'
-	}, options || {});
-	// Create the time string.
-	return [
-		options.hours ? ('00' + time.getUTCHours()).slice(-2) : '',
-		options.minutes ? ('00' + time.getUTCMinutes()).slice(-2) : '',
-		options.seconds ? ('00' + time.getUTCSeconds()).slice(-2) : ''
-	].join(options.separator).trim(options.separator);
+	options = _.merge({ hours: false, minutes: true, seconds: true, separator: ':' }, options || {});
+	var H = Math.floor(this / 3600),
+		M = Math.floor(this / 60),
+		S = Math.floor(this),
+		h,
+		m,
+		s;
+	M = options.hours ? M - 60 * H : M;
+	S = options.hours ? S - 3600 * H : S;
+	S = options.minutes ? S - 60 * M : S;
+	H = options.hours ? ('00' + H).slice(-((h = H.toString().length) > 2 ? h : 2)) : '';
+	M = options.minutes ? ('00' + M).slice(-((m = H.toString().length) > 2 ? m : 2)) : '';
+	S = options.seconds ? ('00' + S).slice(-((s = S.toString().length) > 2 ? s : 2)) : '';
+	return [ H, M, S ].join(options.separator).trim(options.separator);
 };
 
 /**

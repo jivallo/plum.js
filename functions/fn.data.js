@@ -8,7 +8,10 @@
  */
 _.fn.data = function (key, value) {
 	if (value !== undefined) {
-		return this.each(function () { this.plum.data[key] = value; });
+		return this.each(function () {
+			this.plum.data[key] = value;
+			/^[a-z0-9\-]+$/.test(key) && _(this).attr('data-' + key, value);
+		});
 	}
 	if (key === undefined) {
 		return this[0] ? (function () {
