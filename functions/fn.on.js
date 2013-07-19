@@ -28,7 +28,6 @@ _.fn.on = function (event, target, fn) {
 	}
 	return this.each(function () {
 		var elem = this,
-			w3c = !!addEventListener,
 			events = elem.plum.events;
 		_.each(event, function (type, callback) {
 			var func = events[type], fn;
@@ -41,26 +40,13 @@ _.fn.on = function (event, target, fn) {
 					// If no callback functions exist for the current event,
 					// remove the event listener.
 					if (!func.length) {
-						if (w3c) { elem.removeEventListener(type, fn); }
-						else { elem.removeEvent('on' + type, fn); }
-						return;
+						return elem.removeEventListener(type, fn);
 					}
 					func.each(function (i, fn) {
 						var target = fn[1] === elem
 							? elem
 							: _(event.target || elem.srcElement).nearest(fn[1])[0];
 						if (!target) { return; }
-						if (!event.preventDefault) { // IE8
-							event.target = event.srcElement;
-							event.relatedTarget = type === 'mouseover' ? event.fromElement
-								: type === 'mouseout' ? event.toElement
-								: null;
-							event.preventDefault = function () { event.returnValue = false; };
-							event.stopPropagation = function () { event.cancelBubble = true; };
-							if (event.keyCode !== undefined) {
-								event.which = event.keyCode;
-							}
-						}
 						if (!event.originalTarget) {
 							event.originalTarget = event.srcElement;
 						}
@@ -72,11 +58,7 @@ _.fn.on = function (event, target, fn) {
 						}
 					});
 				};
-				if (w3c) {
-					elem.addEventListener(type, fn, false);
-				} else {
-					elem.attachEvent('on' + type, fn);
-				}
+				elem.addEventListener(type, fn, false);
 			}
 			events[type].push([ callback, target || elem ]);
 			events[type] = _.unique(events[type]);

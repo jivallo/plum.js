@@ -6,7 +6,8 @@
  * @return  object  Returns a Plum object
  */
 _.fn.slide = function (options) {
-	var direction = options.direction || 'left';
+	var options = options || {},
+		direction = options.direction || 'left';
 	return this.queue(function (i) {
 		var elem = _(this), style = _.tween.slide.call(this, direction);
 		if (elem.is(':hidden') && (direction === 'down' || direction === 'right')) {

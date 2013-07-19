@@ -8,11 +8,9 @@
  */
 _.ajax = function (o, callback) {
 	var ajax = _.copy(_.ajax.prototype);
-	if (_.sp.ajax) {
-		if (typeof o === 'string') { o = { url: o, method: 'get' }; }
-		if (typeof callback === 'function') { o.complete = callback; }
-		ajax.open(o, this);
-	}
+	if (typeof o === 'string') { o = { url: o, method: 'get' }; }
+	if (typeof callback === 'function') { o.complete = callback; }
+	ajax.open(o, this);
 	return this;
 };
 
@@ -105,12 +103,12 @@ _.ajax.prototype = {
 				+ ')?(?:/|$)'
 			),
 			parse,
-			params;
+			params = opts.params instanceof File ? opts.params : undefined;
 
 		if ((elem.nodeName || elem instanceof _) && (elem = _(elem)) && elem.is('form')) {
 			opts.url = elem.attr('action');
 			opts.method = elem.attr('method') || 'get';
-			opts.params = elem.encode();
+			opts.params = params || elem.encode();
 		}
 
 		opts = _.merge(_.copy(this.options), opts);
@@ -125,32 +123,35 @@ _.ajax.prototype = {
 		}
 
 		opts.method = opts.method.toLowerCase();
-		params = this.params(opts.params);
+		opts.params = params || this.params(opts.params);
 
 		if (opts.url.indexOf(' ') > -1) {
 			parse = opts.url.substr(opts.url.indexOf(' ') + 1);
 			opts.url = opts.url.substring(0, opts.url.indexOf(' '));
 		}
 
-		if (opts.method === 'get' && params) {
-			opts.url += (opts.url.indexOf('?') >= 0 ? '&' : '?') + params;
+		if (opts.method === 'get' && opts.params) {
+			opts.url += (opts.url.indexOf('?') >= 0 ? '&' : '?') + opts.params;
 		}
 
 		xhr = new XMLHttpRequest();
 		xhr.open(opts.method, opts.url, !opts.sync);
 		this.headers(xhr, opts.headers, opts.method);
 		if (opts.before(xhr) !== false) {
-			if (xhr.upload) {
-				xhr.upload.addEventListener('loadstart', opts.start, false);
-				xhr.upload.addEventListener('progress', opts.progress, false);
-			}
 			if (opts.type === 'binary') {
 				xhr.overrideMimeType('text/plain; charset=x-user-defined');
+			}
+			if (opts.params instanceof File) {
+				xhr.setRequestHeader('X-File-Name', opts.params.name);
+				xhr.setRequestHeader('X-File-Size', opts.params.size);
+				xhr.upload.addEventListener('loadstart', opts.start, false);
+				xhr.upload.addEventListener('progress', opts.progress, false);
+				xhr.upload.addEventListener('load', opts.progress, false);
 			}
 			xhr.onreadystatechange = function () {
 				if (xhr.readyState === 4) { this.complete.call(elem, opts, xhr, parse); }
 			}.bind(this);
-			xhr.send(opts.method === 'post' ? params : null);
+			xhr.send(opts.method === 'post' ? opts.params : null);
 		}
 	},
 

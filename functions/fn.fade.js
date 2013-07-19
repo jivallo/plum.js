@@ -10,7 +10,8 @@
  * @return  object  Returns a Plum object
  */
 _.fn.fade = function (options) {
-	var direction = options.direction || 'out';
+	var options = options || {},
+		direction = options.direction || 'out';
 	return this.queue(function () {
 		var elem = _(this),
 			hiding = /^(?:up|left|out)$/.test(direction),

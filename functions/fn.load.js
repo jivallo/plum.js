@@ -2,32 +2,28 @@
  * Load multiple scripts or style sheets into the target.
  *
  * @since   1.0
- * @param   array     files     A list of scripts or style sheets to load
- * @param   function  callback  A function to run after the file has loaded
+ * @param   array     files  A list of scripts or style sheets to load
+ * @param   function  fn     A function to run after the file has loaded
  * @return  mixed     Returns the load function or a Plum object
  */
-_.fn.load = function (files, comp) {
-	var comp = comp|| function () {},
+_.fn.load = function (files, fn) {
+	var fn = fn|| function () {},
 		elem = _(this[0]),
 		load = function (media) {
 			var file,
-				next,
-				style = media.substr(media.lastIndexOf('.') + 1),
+				next = function () { (next = files.shift()) ? load(next) : window.setTimeout(fn.bind(elem), 0); },
+				style = media.substr(media.lastIndexOf('.') + 1) === 'css',
 				doesNotExist = true;
-			style = style === 'css' ? true : false;
-			_.array(document[style ? 'styleSheets' : 'scripts']).each(function () {
-				var loc = ('' + this)[style ? 'href' : 'src'];
-				if (loc && loc.indexOf(media) > -1) {
-					return (doesNotExist = false);
+			_.each(document[style ? 'styleSheets' : 'scripts'], function (loc) {
+				if ((loc = this[style ? 'href' : 'src']) && ~loc.indexOf(media)) {
+					return !((doestNotExist = false) && next());
 				}
 			});
 			if (doesNotExist) {
 				file = style
-					? _('<link rel="stylesheet" href="' + media + '">')
+					? _(document.createElement('link')).attr('rel', 'stylesheet').attr('href', media)
 					: _(document.createElement('script')).attr('src', media);
-				file.on('load', function () {
-					(next = files.shift()) ? load(next) : comp.call(elem);
-				});
+				file.on('load', next);
 				elem.insert(file);
 			}
 		};

@@ -8,45 +8,26 @@
  * @return  object  Returns a Plum object
  */
 _.fn.toggle = function (property, value, callback) {
-	var i = 0, iLength, node;
+	var i = 0, node;
 	return this.each(function () {
-		var elem = _(this), hidden = elem.is(':hidden');
+		var elem = _(this);
 		// Set a boolean property value.
 		if (typeof this[property] === 'boolean') {
 			this[property] = !this[property];
 
-		// Slide the element's visibility. "value" will refer to the speed at
-		// which the element should slide or fade.
-		} else if (property === 'slide') {
-			elem.slide({
-				direction: hidden ? 'down' : 'up',
-				duration: value,
-				complete: callback
-			});
-
-		// Slide the element to the left or right.
-		} else if (property === 'slide.horizontal') {
-			elem.slide({
-				direction: hidden ? 'right' : 'left',
-				duration: value,
-				complete: callback
-			});
-
-		// Fade the element's visibility.
-		} else if (property === 'fade') {
-			elem.fade({
-				direction: hidden ? 'in' : 'out',
-				duration: value,
-				complete: callback
-			});
-
-		// Fade vertical directional visibility.
-		} else if (property === 'fade.vertical') {
-			elem.fade({
-				direction: hidden ? 'down' : 'up',
-				duration: value,
-				complete: callback
-			});
+		// Slide or fade the element's visibility. The "value" argument refers to
+		// the speed at which the element should slide or fade.
+		} else if ((node = property.match(/^(slide|fade)(?:\.(horizontal|vertical))?$/))) {
+			if (elem.is('hidden')) {
+				property = node[1]
+					? (node[1] === 'vertical' ? 'down' : 'right')
+					: (node[0] === 'fade' ? 'in' : 'down');
+			} else {
+				property = node[1]
+					? (node[1] === 'vertical' ? 'up' : 'left')
+					: (node[0] === 'fade' ? 'out' : 'up');
+			}
+			elem.slide({ direction: property, duration: value, complete: callback });
 
 		// Fade horizontal directional visibility.
 		} else if (property === 'fade.horizontal') {

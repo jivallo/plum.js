@@ -10,7 +10,6 @@ _.fn.scroll = function (options) {
 		complete: function () {},
 		direction: 'top',
 		duration: 500,
-		easing: 'linear',
 		to: 0,
 		mousebottom: 0,
 		mouseleft: 0,
@@ -33,8 +32,10 @@ _.fn.scroll = function (options) {
 						bottom: clnY > area.y + area.height - options.mousebottom,
 						left: clnX < area.x - options.mouseleft
 					},
-					tween = function (from, to, duration, rev) {
-						if (this.plum.tween.active ? false : (rev ? from < to : from > to)) {
+					// from, to, duration, rev
+					tween = function (from, duration, to) {
+						to = to || 0;
+						if (this.plum.tween.active ? false : (to ? from < to : from > to)) {
 							duration *= options.duration;
 							elem.tween({ duration: duration, style: { scrollTop: to } });
 						}
@@ -42,28 +43,36 @@ _.fn.scroll = function (options) {
 
 				// Scroll to the element's top.
 				if (move.top) {
-					tween(this.scrollTop, 0, this.scrollTop / this.scrollHeight);
+					tween(this.scrollTop, this.scrollTop / this.scrollHeight);
 				} else if (!move.right && !move.bottom && !move.left) {
 					elem.stop();
 				}
 
 				// Scroll to the element's right side.
 				if (move.right) {
-					tween(this.scrollLeft, this.scrollWidth - area.width, (this.scrollWidth - this.scrollLeft - area.width) / this.scrollWidth, true);
+					tween(
+						this.scrollLeft,
+						(this.scrollWidth - this.scrollLeft - area.width) / this.scrollWidth,
+						this.scrollWidth - area.width
+					);
 				} else if (!move.top && !move.bottom && !move.left) {
 					elem.stop();
 				}
 
 				// Scroll to the element's bottom.
 				if (move.bottom) {
-					tween(this.scrollTop, this.scrollHeight - area.height, (this.scrollHeight - this.scrollTop - area.height) / this.scrollHeight, true);
+					tween(
+						this.scrollTop,
+						(this.scrollHeight - this.scrollTop - area.height) / this.scrollHeight,
+						this.scrollHeight - area.height
+					);
 				} else if (!move.top && !move.left && !move.right) {
 					elem.stop();
 				}
 
 				// Scroll to the element's left side.
 				if (move.left) {
-					tween(this.scrollLeft, 0, this.scrollLeft / this.scrollWidth);
+					tween(this.scrollLeft, this.scrollLeft / this.scrollWidth);
 				} else if (!move.top && !move.right && !move.bottom) {
 					elem.stop();
 				}

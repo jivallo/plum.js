@@ -35,19 +35,6 @@ _.style.prop = {
 		style.borderRadius = value;
 		return style;
 	},
-	opacity: function (style, value) {
-		var ie;
-		if (_.sp.opacity) {
-			style.opacity = value;
-		} else {
-			ie = parseFloat(value) * 100;
-			style['-ms-filter'] = '"progid:DXImageTransform.Microsoft.Alpha(Opacity=' + ie + ')"';
-			style['filter'] = 'alpha(opacity=' + ie + ')';
-			style['-moz-opacity'] = value;
-			style['-khtml-opacity'] = value;
-		}
-		return style;
-	},
 	userSelect: function (style, value) {
 		style.MozUserSelect = value;
 		style.MsUserSelect = value;
@@ -68,25 +55,6 @@ _.style.match = {
 		'\\s*(\\d?(?:\\.[\\d]+))\\)$'
 	),
 	shorthand: /(?:(\d+)(?:px\s+)?\s*)/g
-};
-
-/**
- * RGBa support for < IE9.
- *
- * @since   1.0
- * @param   object  elem  The HTML element
- * @param   array   rgba  The parts of an RGBa string
- * @return  void
- */
-_.style.rgba = function (elem, rgba) {
-	var style = elem.style,
-		filter = 'progid:DXImageTransform.Microsoft.gradient',
-		color = ('0' + Math.round(rgba[4] * 255).toString(16)).slice(-2)
-			+ (rgba[3] | (rgba[2] << 8) | (rgba[1] << 16)).toString(16);
-	style['background'] = 'transparent';
-	style['-ms-filter'] = '"' + filter + '(startColorstr=#' + color + ',endColorstr=#' + color + ')"';
-	style['filter'] = filter + '(startColorstr=#' + color + ',endColorstr=#' + color + ')';
-	style['zoom'] = 1;
 };
 
 /**
@@ -121,19 +89,22 @@ _.style.shorthand = function (value) {
 _.style.parse = function (property) {
 	var auto = /^(?:0px|auto)$/, value;
 	property = property === 'float' ? 'cssFloat' : property;
-	if (/^scroll(?:Left|Top)$/.test(property)) {
-		return this[property];
-	}
-	if (this && this.style) {
+	if (property === 'outerHeight') {
+		value = this.offsetHeight + _.sum(_.style.get(this, [ 'borderBottomWidth', 'borderTopWidth', 'marginBottom', 'marginTop' ]));
+	} else if (property === 'outerWidth') {
+		value = this.offsetWidth + _.sum(_.style.get(this, [ 'marginLeft', 'marginRight' ]));
+	} else if (/^scroll(?:Left|Top)$/.test(property)) {
+		value = this[property];
+	} else if (this && this.style) {
 		value = this.style[property];
 		value = value || window.getComputedStyle(this)[property];
-		return property === 'width' && auto.test(value) ? this.offsetWidth
+		value = property === 'width' && auto.test(value) ? this.offsetWidth
 			: property === 'height' && auto.test(value) ? this.offsetHeight
 			: value;
+	} else if (this === window && /^(?:height|width)$/.test(property)) {
+		value = this[('outer-' + property).toCamelCase()];
 	}
-	if (this === window && /^(?:height|width)$/.test(property)) {
-		return this[('outer-' + property).toCamelCase()];
-	}
+	return value;
 };
 
 /**
@@ -146,7 +117,7 @@ _.style.parse = function (property) {
  */
 _.style.get = function (elem, style) {
 	var css, i, match = _.style.match, parse = _.style.parse;
-	elem = elem[0];
+	elem = elem instanceof _ ? elem[0] : elem;
 	if (typeof style === 'string') {
 		i = style.replace(/([A-Z])/, '-$1').toLowerCase();
 		i = style.replace(/-([a-z])/g, function (a, b) { return b.toUpperCase(); });
@@ -155,7 +126,7 @@ _.style.get = function (elem, style) {
 	}
 	if (style instanceof Array) {
 		css = {};
-		style.forEach(function (property, i) {
+		style.each(function (i, property) {
 			var style = parse.call(elem, property);
 			style = match.pixel.test(style) ? parseFloat(style) : style;
 			css[property] = style;
@@ -184,26 +155,30 @@ _.style.get = function (elem, style) {
 _.style.set = function (elem, style) {
 	var match = _.style.match;
 	return elem.each(function () {
-		var css = this.style, find, prop, value;
+		var css = this.style,
+			change = [],
+			elem = _(this),
+			find,
+			prop,
+			value;
 		for (prop in style) {
 			prop = prop === 'float' ? 'cssFloat' : prop;
 			prop = prop.toCamelCase();
 			value = style[prop];
+			change.push(prop);
 			if (/^scroll(?:Left|Top)$/.test(prop)) {
 				this[prop] = value;
 			} else if (_.style.prop[prop]) {
 				_.style.prop[prop].call(this, css, value);
-			} else if (prop === 'zIndex') {
+			} else if (/^(?:opacity|zIndex)$/.test(prop)) {
 				css[prop] = value;
 			} else if (match.pixel.test(value)) {
-				css[prop] = parseFloat(value) + 'px';
-			} else if (value && (find = value.match(match.rgba)) && !_.sp.rgba) {
-				_.style.rgba(this, find);
+				css[prop] = parseFloat(value) + 'px';;
 			} else {
 				css[prop] = value;
 			}
 		}
-		_(this).fire('style', css);
+		elem.fire('style', change);
 	});
 };
 

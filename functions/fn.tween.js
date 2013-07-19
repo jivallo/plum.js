@@ -22,6 +22,7 @@ _.fn.tween = function (options) {
 		for (i in style) { start.push(i); }
 		_.tween.call(this, {
 			complete: options.complete,
+			frame: options.frame,
 			duration: options.duration,
 			easing: options.easing,
 			end: style,
@@ -38,13 +39,14 @@ _.fn.tween = function (options) {
  * @return  void
  */
 _.tween = function (options) {
-	var complete = typeof options.complete !== 'function' ? function () {} : options.complete,
+	var complete = options.complete || function () {},
 		done = true,
 		duration = typeof options.duration !== 'number' ? 500 : options.duration,
 		easing = typeof options.easing === 'function' ? options.easing
 			: Math.tween[options.easing] || Math.tween.linear,
 		elem = _(this),
 		end = options.end,
+		frame = options.frame || function () {},
 		frameEnd,
 		frameStart,
 		i = 0,
@@ -53,7 +55,7 @@ _.tween = function (options) {
 		start = options.start,
 		step = (new Date()).getTime(),
 		value,
-		frame = function () {
+		tween = function () {
 			var style = {}, now = (new Date()).getTime() - step;
 			if (!this.plum.tween.active) { return; }
 			if (now >= duration) {
@@ -82,7 +84,8 @@ _.tween = function (options) {
 				}
 			}
 			elem.style(style);
-			window.requestAnimationFrame(frame);
+			frame.call(elem[0]);
+			window.requestAnimationFrame(tween);
 		}.bind(this);
 
 	// If all properties are identical, the animation has already completed
@@ -95,7 +98,7 @@ _.tween = function (options) {
 	if (done) { duration = 0; }
 
 	// Begin the animation.
-	window.requestAnimationFrame(frame);
+	window.requestAnimationFrame(tween);
 };
 
 /*

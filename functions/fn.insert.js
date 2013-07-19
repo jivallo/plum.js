@@ -9,10 +9,17 @@
  * @return  object  Returns a Plum object
  */
 _.fn.insert = function (html, position) {
-	var elem = this, node, func, parent, str = false;
+	var elem = this,
+		fire = [],
+		node,
+		func,
+		parent,
+		str = false;
 	if (position === 'into') {
-		html = _(html);
-	} else if (html instanceof Object && html.nodeName) {
+		_(html).insert(elem);
+		return elem;
+	}
+	if (html instanceof Object && html.nodeName) {
 		html = [ html ];
 	} else if (typeof html === 'string' || typeof html === 'number') {
 		str = true;
@@ -29,9 +36,7 @@ _.fn.insert = function (html, position) {
 			html = [ document.createTextNode(html) ];
 		}
 	}
-	if (position === 'into') {
-		html.insert(elem);
-	} else if (html) {
+	if (html) {
 		elem.each(function () {
 			switch (position) {
 				case 'after':
@@ -62,9 +67,10 @@ _.fn.insert = function (html, position) {
 				try {
 					var ins = str ? this.cloneNode(true) : this;
 					parent[func](ins, node);
-					elem.fire('html html.' + (position || 'append'), ins);
+					fire.push(ins);
 				} catch (e) {}
 			});
+			elem.fire('html html.' + (position || 'append'), fire);
 		});
 	}
 	return elem;

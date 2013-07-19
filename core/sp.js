@@ -4,23 +4,6 @@ _.sp = (function () {
 	var html = _.hidden.children[1].firstChild;
 
 	return {
-		// Check for AJAX support. In Internet Explorer,  set XMLHttpRequest to
-		// one of Microsoft's ActiveX objects.
-		ajax: !!window.XMLHttpRequest || !!(window.XMLHttpRequest = function () {
-			var i = 0, types = [
-				'Microsoft.XMLHTTP',
-				'MSXML2.XMLHTTP.6.0',
-				'MSXML2.XMLHTTP.5.0',
-				'MSXML2.XMLHTTP.4.0',
-				'MSXML2.XMLHTTP.3.0',
-				'MSXML2.XMLHTTP'
-			];
-			for (; i < 6; ) {
-				try { return new ActiveXObject(types[i++]); }
-				catch (e) {}
-			}
-		}),
-
 		// Check audio support for various audio types.
 		audio: (function () {
 			var audio = document.createElement('audio'),
@@ -54,7 +37,6 @@ _.sp = (function () {
 				}
 			}
 			return false;
-
 		}('Moz Webkit Khtml O ms '.split(' '))),
 
 		// Canvas support.
@@ -70,19 +52,7 @@ _.sp = (function () {
 		file: !!(window.File && window.FileList),
 
 		// Adobe Flash detection.
-		flash: (function () {
-			var support = false;
-			try {
-				if (navigator.mimeTypes['application/x-shockwave-flash'] !== undefined) {
-					support = true;
-				}
-			} catch (e) {
-				if (window.ActiveXObject && new window.ActiveXObject('ShockwaveFlash.ShockwaveFlash')) {
-					support = true;
-				}
-			}
-			return support;
-		}()),
+		flash: !!navigator.mimeTypes['application/x-shockwave-flash'],
 
 		// HTML5 history support.
 		history: !!(window.history && history.pushState),

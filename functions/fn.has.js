@@ -10,12 +10,25 @@
 _.fn.has = function (prop, value, begin) {
 	if (this[0] === document) { return false; }
 	switch (prop) {
+		case 'attr':
+			begin = false;
+			this.each(function () {
+				prop = _.array(this.attributes).each(function (i, attr) {
+					if (attr.name === value) {
+						return attr.name;
+					}
+				});
+				if (prop === value) {
+					return !(begin = true);
+				}
+			});
+			return begin;
 		case 'class':
 			begin = begin ? '[^\\s]*' : '';
 			value = value.split(/\s+/).join(begin + '|') + begin;
 			value = new RegExp('(?:^| )(?:' + value + ')(?: |$)');
 			value = this.each(function () {
-				return this.className.match(value);
+				return typeof this.className === 'string' ? this.className.match(value) : null;
 			});
 			(value || []).each(function (i, prop) {
 				value[i] = prop.trim();

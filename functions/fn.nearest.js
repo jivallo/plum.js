@@ -9,8 +9,7 @@
  */
 _.fn.nearest = function (find, scope) {
 	var elems = [];
-	scope = scope === 'child' ? 'descendants' : 'ancestors';
-	var show = find === '.product' && this[0] !== window;
+	scope = scope ? 'descendants' : 'ancestors';
 	this.each(function () {
 		if (_(this).is(find)) {
 			elems.push(this);
