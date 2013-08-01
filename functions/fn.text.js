@@ -7,8 +7,8 @@
  */
 _.fn.text = function (content) {
 	return content === undefined
-		? (this[0] ? this[0].textContent || this[0].innerText : undefined)
+		? (this[0] ? this[0][this[0].textContent !== undefined ? 'textContent' : 'innerText'] : undefined)
 		: this.each(function () {
-			this[this.textContent ? 'textContent' : 'innerText'] = content;
+			this[this.textContent !== undefined ? 'textContent' : 'innerText'] = content;
 		});
 };

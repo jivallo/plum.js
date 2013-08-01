@@ -7,8 +7,6 @@
  */
 _.fn.not = function (selector) {
 	var elems = [];
-	this.each(function () {
-		if (!_(this).is(selector)) { elems.push(this); }
-	});
+	this.each(function () { if (!_(this).is(selector)) { elems.push(this); } });
 	return _(elems);
 };

@@ -5,44 +5,18 @@
  * property.
  *
  * @since   1.0
- * @param   mixed   property  The property to retrieve or properties to set
- * @param   object  value     The element to style or retrieve
+ * @param   mixed   prop   The property to retrieve or properties to set
+ * @param   object  value  The element to style or retrieve
  * @return  mixed   Returns a style value or a Plum object
  */
-_.style = function (property, value) {
-	if (this instanceof _) { value = this; }
+_.style = function (prop, value) {
 	return _.style[
-		typeof property === 'string'
-			|| property === undefined
-			|| property instanceof Array
+		typeof prop === 'string'
+			|| prop === undefined
+			|| prop instanceof Array
 		? 'get'
 		: 'set'
-	](value, property);
-};
-
-_.style.prop = {
-	boxSizing: function (style, value) {
-		style.MozBoxSizing = value;
-		style.MsBoxSizing = value;
-		style.WebkitBoxSizing = value;
-		style.boxSizing = value;
-		return style;
-	},
-	borderRadius: function (style, value) {
-		style.MozBorderRadius = value;
-		style.MsBorderRadius = value;
-		style.WebkitBorderRadius = value;
-		style.borderRadius = value;
-		return style;
-	},
-	userSelect: function (style, value) {
-		style.MozUserSelect = value;
-		style.MsUserSelect = value;
-		style.WebkitTouchCallout = value;
-		style.WebkitUserSelect = value;
-		style.userSelect = value;
-		return style;
-	}
+	](this instanceof _ ? this : value, prop);
 };
 
 _.style.match = {
@@ -56,6 +30,16 @@ _.style.match = {
 	),
 	shorthand: /(?:(\d+)(?:px\s+)?\s*)/g
 };
+_.style.prefix = (function () {
+	var prefix = /^(Moz|webkit|Khtml|O|ms|Icab)(?=[A-Z])/, p;
+	for (p in document.documentElement.style) {
+		if (prefix.test(p)) {
+			return p.match(prefix)[0];
+		}
+	}
+	return '';
+}());
+_.style.prop = {};
 
 /**
  * Converts a shorthand property value to an array of numbers referencing top,
@@ -87,15 +71,18 @@ _.style.shorthand = function (value) {
  * @return  mixed   Returns the calculated property value
  */
 _.style.parse = function (property) {
-	var auto = /^(?:0px|auto)$/, value;
-	property = property === 'float' ? 'cssFloat' : property;
+	var auto = /^(?:0px|auto)$/,
+		value,
+		property = property === 'float' ? 'cssFloat' : property,
+		prefix = (_.style.prefix + '-' + property).toCamelCase();
 	if (property === 'outerHeight') {
-		value = this.offsetHeight + _.sum(_.style.get(this, [ 'borderBottomWidth', 'borderTopWidth', 'marginBottom', 'marginTop' ]));
+		value = this.offsetHeight + _.sum(_.style.get(this, [ 'marginBottom', 'marginTop' ]));
 	} else if (property === 'outerWidth') {
 		value = this.offsetWidth + _.sum(_.style.get(this, [ 'marginLeft', 'marginRight' ]));
 	} else if (/^scroll(?:Left|Top)$/.test(property)) {
 		value = this[property];
 	} else if (this && this.style) {
+		property = prefix in this.style ? prefix : property;
 		value = this.style[property];
 		value = value || window.getComputedStyle(this)[property];
 		value = property === 'width' && auto.test(value) ? this.offsetWidth
@@ -104,41 +91,33 @@ _.style.parse = function (property) {
 	} else if (this === window && /^(?:height|width)$/.test(property)) {
 		value = this[('outer-' + property).toCamelCase()];
 	}
-	return value;
+	return _.style.match.pixel.test(value) ? parseFloat(value) : value;
 };
 
 /**
  * Returns the element's style value of the requested style.
  *
  * @since   1.0
- * @param   object  elem   The Plum object
- * @param   string  style  The style property to get
+ * @param   object  elem  The Plum object
+ * @param   string  prop  The style property to get
  * @param   mixed   Returns the style value
  */
-_.style.get = function (elem, style) {
-	var css, i, match = _.style.match, parse = _.style.parse;
+_.style.get = function (elem, prop) {
+	var css,
+		match = _.style.match,
+		parse = _.style.parse;
 	elem = elem instanceof _ ? elem[0] : elem;
-	if (typeof style === 'string') {
-		i = style.replace(/([A-Z])/, '-$1').toLowerCase();
-		i = style.replace(/-([a-z])/g, function (a, b) { return b.toUpperCase(); });
-		css = parse.call(elem, i);
-		return match.pixel.test(css) ? parseFloat(css) : css;
-	}
-	if (style instanceof Array) {
+	if (!elem) { return; }
+	if (typeof prop === 'string') { return parse.call(elem, prop); }
+	if (prop instanceof Array) {
 		css = {};
-		style.each(function (i, property) {
-			var style = parse.call(elem, property);
-			style = match.pixel.test(style) ? parseFloat(style) : style;
-			css[property] = style;
-		});
+		prop.each(function (i, prop) { css[prop] = parse.call(elem, prop); });
 		return css;
 	}
 	css = {};
-	for (i in elem.style) {
-		if (typeof elem.style[i] === 'string' && i !== 'cssText') {
-			style = parse.call(elem, i);
-			style = match.pixel.test(style) ? parseFloat(style) : style;
-			css[i === 'cssFloat' ? 'float' : i] = style;
+	for (prop in elem.style) {
+		if (typeof elem.style[prop] === 'string' && i !== 'cssText') {
+			css[prop] = parse.call(elem, prop);
 		}
 	}
 	return css;
@@ -154,11 +133,9 @@ _.style.get = function (elem, style) {
  */
 _.style.set = function (elem, style) {
 	var match = _.style.match;
-	return elem.each(function () {
+	return elem.each(function (p) {
 		var css = this.style,
 			change = [],
-			elem = _(this),
-			find,
 			prop,
 			value;
 		for (prop in style) {
@@ -175,10 +152,11 @@ _.style.set = function (elem, style) {
 			} else if (match.pixel.test(value)) {
 				css[prop] = parseFloat(value) + 'px';;
 			} else {
-				css[prop] = value;
+				p = (_.style.prefix + '-' + prop).toCamelCase();
+				css[p in css ? p : prop] = value;
 			}
 		}
-		elem.fire('style', change);
+		_(this).fire('style', change);
 	});
 };
 

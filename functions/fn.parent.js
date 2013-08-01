@@ -7,11 +7,5 @@
  * @return  object  Returns a Plum object
  */
 _.fn.parent = function (find, deep) {
-	var elems = [], scope;
-	this.each(function () {
-		scope = _.parse[deep ? 'ancestors' : 'parent']([ this ]);
-		scope = find ? _(find, scope) : scope;
-		scope.each(function () { elems.push(this); });
-	});
-	return _(elems);
+	return _.fn.children.call(this, find, deep ? 'ancestors' : 'parent');
 };

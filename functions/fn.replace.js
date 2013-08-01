@@ -10,7 +10,7 @@ _.fn.replace = function (html) {
 	this.each(function () {
 		var elems = html,
 			node = _(elems.slice(0, 1)[0]);
-		this.parentNode.replaceChild(node[0], this);
+		this.parentNode && this.parentNode.replaceChild(node[0], this);
 		node.insert(elems, 'after');
 	});
 	return html;

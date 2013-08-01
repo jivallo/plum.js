@@ -70,7 +70,7 @@ _.fn.insert = function (html, position) {
 					fire.push(ins);
 				} catch (e) {}
 			});
-			elem.fire('html html.' + (position || 'append'), fire);
+			elem.fire('html.' + (position || 'append'));
 		});
 	}
 	return elem;

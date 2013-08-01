@@ -11,8 +11,12 @@ _.fn.toggle = function (property, value, callback) {
 	var i = 0, node;
 	return this.each(function () {
 		var elem = _(this);
+		// When no property is set, assume CSS visibility should be toggled
+		if (!property) {
+			elem[elem.is(':hidden') ? 'show' : 'hide']();
+
 		// Set a boolean property value.
-		if (typeof this[property] === 'boolean') {
+		} else if (typeof this[property] === 'boolean') {
 			this[property] = !this[property];
 
 		// Slide or fade the element's visibility. The "value" argument refers to
@@ -43,13 +47,6 @@ _.fn.toggle = function (property, value, callback) {
 				elem.attr('class', value, !elem.has('class', value));
 			});
 
-		// When no value is set, assume CSS visibility should be toggled
-		} else if (!value) {
-			node = _(this).style('display');
-			this.style.display = this.plum.style.display ? this.plum.style.display
-				: node === 'none' ? 'block'
-				: 'none';
-			this.plum.style.display = node;
 		}
 	});
 };

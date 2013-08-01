@@ -10,8 +10,8 @@ _.fn.data = function (key, value) {
 	if (value !== undefined) {
 		return this.each(function () {
 			this.plum.data[key] = value;
-			if (/^[a-z0-9\-]+$/.test(key) && typeof value === 'string') {
-				_(this).attr('data-' + key, value);
+			if (/^[a-z0-9\-]+$/.test(key) && typeof value === 'string' || typeof value === 'number') {
+				_(this).attr('data-' + key, value.toString());
 			}
 		});
 	}

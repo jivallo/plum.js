@@ -71,7 +71,13 @@ _.pseudo = {
 	input: function () {
 		return /^(?:button|input|select|textarea)$/.test(this.nodeName.toLowerCase());
 	},
-	hidden: function () { return !_.pseudo.visible.call(this); },
+	hidden: function () {
+		var style = _(this).style([ 'display', 'visibility', 'opacity' ]);
+		return this.hidden
+			|| style.display === 'none'
+			|| style.visibility === 'hidden'
+			|| style.opacity === 0;
+	},
 	lang: function () { },
 	lastChild: function () { return this.parentNode.lastChild === this; },
 	link: function () { return this.nodeName.toLowerCase() === 'a'; },
@@ -136,13 +142,7 @@ _.pseudo = {
 		var type = this.attributes.type;
 		return type && type.value === 'url';
 	},
-	visible: function () {
-		var style = _(this).style([ 'display', 'visibility', 'opacity' ]);
-		return !(this.hidden
-			|| style.display === 'none'
-			|| style.visibility === 'hidden'
-			|| !style.opacity);
-	},
+	visible: function () { return !_.pseudo.hidden.call(this); },
 	week: function () {
 		var type = this.attributes.type;
 		return type && type.value === 'week';

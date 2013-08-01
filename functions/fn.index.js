@@ -10,9 +10,7 @@ _.fn.index = function (find) {
 	if (/^\d+$/.test(find)) {
 		elem = _(this[+find]);
 	} else if (typeof find === 'string') {
-		this.each(function (i) {
-			if (_(this).is(find)) { elem = i; return false }
-		});
+		this.each(function (i) { if (_(this).is(find)) { return (elem = i) < 0; } });
 	} else {
 		elem = this.indexOf(find instanceof _ ? find[0] : find);
 	}

@@ -20,5 +20,5 @@ _.fn.wrap = function (html) {
 			html = html.childNodes[0];
 		}
 		html.appendChild(this);
-	}).fire('html html.wrap', html);
+	}).fire('html.wrap', html);
 };

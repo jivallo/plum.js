@@ -37,7 +37,7 @@ _.sp = (function () {
 				}
 			}
 			return false;
-		}('Moz Webkit Khtml O ms '.split(' '))),
+		}('Moz webkit Khtml O ms Icab '.split(' '))),
 
 		// Canvas support.
 		canvas: !!document.createElement('canvas').getContext,
@@ -76,14 +76,13 @@ _.sp = (function () {
 				support[types[i].toCamelCase()] = field.type === types[i];
 			}
 			return support;
-		}('color date datetime datetime-local email month number range search tel url week'.split(' '))),
+		}('color date datetime datetime-local email month number range search tel time url week'.split(' '))),
 
 		// HTML5 user media support.
 		media: !!(navigator.getUserMedia = navigator.getUserMedia
 			|| navigator.mozGetUserMedia
 			|| navigator.msGetUserMedia
-			|| navigator.webkitGetUserMedia
-			|| undefined),
+			|| navigator.webkitGetUserMedia),
 
 		// CSS3 opacity support.
 		opacity: (html.style.opacity = '0') && html.style.opacity === '0',
@@ -96,6 +95,16 @@ _.sp = (function () {
 			var support = {},
 				i = 0,
 				l = types.length;
+			support.indexedDb = !!(window.indexdED = window.indexedDB
+				|| window.mozIndexedDB
+				|| window.webkitIndexedDB
+				|| msIndexedDB)
+				&& !!(window.IDBTransaction = window.IDBTransaction
+				|| window.webkitIDBTTransaction
+				|| window.msIDBTransaction)
+				&& !!(window.IDBKeyRange = window.IDBKeyRange
+				|| window.webkitIDBKeyRange
+				|| winow.msIDBKeyRange);
 			for (; i < l; i++) {
 				try {
 					window[types[i] + 'Storage'].setItem(_.instance, true);
@@ -107,6 +116,9 @@ _.sp = (function () {
 			}
 			return support;
 		}('local session'.split(' '))),
+
+		// Check for SVG support.
+		svg: !!window.SVGSVGElement,
 
 		// Check video support for various video types.
 		video: (function () {

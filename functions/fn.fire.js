@@ -9,12 +9,17 @@ _.fn.fire = function (event) {
 	var args = _.array(arguments).slice(1);
 	event = event.split(/\s+/);
 	return this.each(function () {
-		var elem = this, fn;
+		var elem = this;
 		event.each(function (i, event) {
-			var trgt = elem, bubble = true, ret;
+			var trgt = elem, bubble = true, ret, fn, evt;
 			// Bubble up the document tree.
 			while (elem) {
-				if (elem.plum && (fn = elem.plum.events[event])) {
+				if (elem.plum) {
+					fn = [];
+					for (i in elem.plum.events) {
+						evt = (new RegExp('^' + i + '(?:\.|$)')).test(event);
+						evt && (fn = fn.concat(elem.plum.events[i]));
+					}
 					if (typeof elem[event] === 'function') {
 						elem[event]();
 					} else {

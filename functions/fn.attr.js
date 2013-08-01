@@ -15,27 +15,33 @@ _.fn.attr = function (name, value, action) {
 				this[name] = value;
 				this[value ? 'setAttribute' : 'removeAttribute'](name, value);
 			} else if (name === 'class') {
-				var elem = this;
-				if (value === '*') {
-					this.removeAttribute('class');
-				} else {
-					value.split(/\s+/).each(function () {
-						var find = new RegExp('(?:^| )' + this + '(?: |$)');
-						if (action === false) {
-							elem.className = elem.className.replace(find, ' ');
-						} else if (!find.test(elem.className)) {
-							elem.className += ' ' + this;
-						}
+				var attr = this.className,
+					clsv = typeof attr === 'string' ? attr : attr.baseVal;
+				if (action === false) {
+					(value === '*' ? '' : value).split(/\s+/).each(function () {
+						clsv = clsv.replace(new RegExp('(?:^| )' + this + '(?: |$)'), ' ');
 					});
-					this.className = this.className.trim().replace(/\s+/g, ' ');
+				} else {
+					clsv = _.unique((clsv + ' ' + value).trim().split(/\s+/)).join(' ');
+				}
+				if (clsv) {
+					if (typeof attr === 'string') {
+						this.className = clsv;
+					} else {
+						this.className.baseVal = clsv;
+					}
+				} else {
+					this.removeAttribute('class');
 				}
 			} else {
 				this.setAttribute(name, value);
 			}
-		}).fire('attr attr.' + name, value);
+		}).fire('attr.' + name, value);
 	}
 	if (this[0] && this[0].getAttribute) {
-		return name === 'class' ? this[0].className : this[0].getAttribute(name);
+		return name === 'class'
+			? (value = this[0].className) && (value.baseVal || value)
+			: this[0].getAttribute(name);
 	}
 	return undefined;
 };

@@ -213,9 +213,7 @@ String.prototype.str2bin = function () {
  * @return  string  Returns a camel-case string
  */
 String.prototype.toCamelCase = function () {
-	return this.replace(/-([a-z])/g, function (a, b) {
-		return b.toUpperCase();
-	});
+	return this.replace(/-([a-z])/gi, function (a, b) { return b.toUpperCase(); });
 };
 
 /**

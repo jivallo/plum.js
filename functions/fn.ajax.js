@@ -9,6 +9,7 @@
 _.ajax = function (o, callback) {
 	var ajax = _.copy(_.ajax.prototype);
 	if (typeof o === 'string') { o = { url: o, method: 'get' }; }
+	else if (typeof o === 'function') { o.complete = o; }
 	if (typeof callback === 'function') { o.complete = callback; }
 	ajax.open(o, this);
 	return this;
@@ -54,7 +55,7 @@ _.ajax.prototype = {
 				text = _.xml(text);
 			}
 			if (this instanceof _ && !this.is('form')) {
-				this.insert(text, 'replace');
+				this.html(text);
 			}
 		} catch (e) {
 			text = null;
@@ -114,7 +115,7 @@ _.ajax.prototype = {
 		opts = _.merge(_.copy(this.options), opts);
 
 		// If the URL is remote, attempt to load the content via JSONP.
-		if (/^https?\:\/\//.test(opts.url) && !islocal.test(opts.url)) {
+		if (/^(?:get|post)$/i.test(opts.method) && /^https?\:\/\//.test(opts.url) && !islocal.test(opts.url)) {
 			i = 'PlumJSONP_' + _.ajax.fn++;
 			window[i] = function (json) { opts.complete.call(elem, json); };
 			parse = document.createElement('script');

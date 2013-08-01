@@ -15,8 +15,8 @@ _.fn.load = function (files, fn) {
 				style = media.substr(media.lastIndexOf('.') + 1) === 'css',
 				doesNotExist = true;
 			_.each(document[style ? 'styleSheets' : 'scripts'], function (loc) {
-				if ((loc = this[style ? 'href' : 'src']) && ~loc.indexOf(media)) {
-					return !((doestNotExist = false) && next());
+				if (this && (loc = this[style ? 'href' : 'src']) && ~loc.indexOf(media)) {
+					return !((doesNotExist = false) && next());
 				}
 			});
 			if (doesNotExist) {

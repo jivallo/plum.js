@@ -7,61 +7,51 @@
  * function or a list of functions.
  *
  * @since   0.1
- * @param   string    event   The name of the event to bind
- * @param   mixed     target  Selector to delegate events
- * @param   function  fn      Functions to call when the event triggers
+ * @param   mixed     evnt  The name of the event to bind or list of events
+ * @param   mixed     trgt  Selector to delegate events
+ * @param   function  call  Functions to call when the event triggers
+ * @param   boolean   once  Run the callback once or indefinitely
  * @return  object  The Plum object
  */
-_.fn.on = function (event, target, fn) {
-	if (event instanceof Object) {
-		target = null;
-	} else {
-		var tmp = event;
-		event = {};
-		if (typeof target === 'function') {
-			fn = target;
-			target = null;
-		} else {
-			target = typeof target === 'string' ? target : null;
-		}
-		tmp.split(/\s+/).each(function (i, e) { event[e] = fn });
+_.fn.on = function (evnt, trgt, call, once) {
+	if (typeof evnt === 'string') {
+		var type = evnt;
+		evnt = {};
+		call = typeof trgt === 'function' ? trgt : call;
+		trgt = typeof trgt !== 'string' ? null : trgt;
+		type.split(/\s+/).each(function (i, e) { evnt[e] = call; });
 	}
-	return this.each(function () {
-		var elem = this,
-			events = elem.plum.events;
-		_.each(event, function (type, callback) {
-			var func = events[type], fn;
-			if (func === undefined) { events[type] = []; func = events[type]; }
-			// An event listener needs to be bound only if a callback doesn't
-			// already exist for the event.
-			if (func.length === 0) {
-				fn = function (event) {
-					var func = events[type];
-					// If no callback functions exist for the current event,
-					// remove the event listener.
-					if (!func.length) {
-						return elem.removeEventListener(type, fn);
-					}
+	return this.each(function (i) {
+		var elem = this, evts = elem.plum.events;
+		_.each(evnt, function (i, callback) {
+			var call = evts[i] || (evts[i] = []), fn;
+			// An event listener needs to be bound only if a callback
+			// doesn't already exist for this specific event.
+			call.length === 0 && (fn = function (event) {
+				var func = evts[i];
+				// Run each callback function for the triggered event.
+				if (func.length) {
 					func.each(function (i, fn) {
-						var target = fn[1] === elem
-							? elem
-							: _(event.target || elem.srcElement).nearest(fn[1])[0];
-						if (!target) { return; }
-						if (!event.originalTarget) {
-							event.originalTarget = event.srcElement;
-						}
-						if (fn[0].call(target, event) === false) {
-							event.preventDefault();
-							event.stopPropagation();
-							event.stopImmediatePropagation();
-							return false;
+						var trgt = fn[1] === elem ? elem : _(event.target || elem.srcElement).nearest(fn[1])[0];
+						if (trgt) {
+							event.originalTarget || (event.originalTarget = event.srcElement);
+							if (fn[0].call(trgt, event) === false) {
+								event.preventDefault();
+								event.stopPropagation();
+								event.stopImmediatePropagation();
+								return false;
+							}
 						}
 					});
-				};
-				elem.addEventListener(type, fn, false);
-			}
-			events[type].push([ callback, target || elem ]);
-			events[type] = _.unique(events[type]);
+					_(elem).ignore(callback, trgt || elem, fn);
+				// Remove the event if no callback functions exist.
+				} else {
+					elem.removeEventListener(i, fn, false);
+				}
+			}) && elem.addEventListener(i, fn, false);
+			// Push the callback function to the list of events.
+			evts[i].push([ callback, trgt || elem ]);
+			evts[i] = _.unique(evts[i]);
 		});
 	});
 };

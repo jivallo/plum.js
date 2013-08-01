@@ -8,19 +8,31 @@
  * @return  object  Returns a Plum object
  */
 _.fn.nearest = function (find, scope) {
-	var elems = [];
+	var elems = [], i, l;
 	scope = scope ? 'descendants' : 'ancestors';
-	this.each(function () {
-		if (_(this).is(find)) {
-			elems.push(this);
-		} else {
-			_.parse[scope]([ this ]).each(function () {
-				if (_(this).is(find)) {
+	if (typeof find === 'string') {
+		find = find.split(/\s*,\s*/);
+		for (i = 0, l = find.length; i < l; i++) {
+			this.each(function () {
+				if (_(this).is(find[i])) {
 					elems.push(this);
-					return false;
+				} else {
+					_.parse[scope]([ this ]).each(function () {
+						return _(this).is(find[i]) ? !elems.push(this) : true;
+					});
 				}
 			});
 		}
-	});
+	} else {
+		this.each(function () {
+			if (_(this).is(find)) {
+				elems.push(this);
+			} else {
+				_.parse[scope]([ this ]).each(function () {
+					return _(this).is(find) ? !elems.push(this) : true;
+				});
+			}
+		});
+	}
 	return _(elems);
 };

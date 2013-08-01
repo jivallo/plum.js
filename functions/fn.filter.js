@@ -7,10 +7,8 @@
  */
 _.fn.filter = function (selector) {
 	var elems = [];
-	if (typeof selector === 'function') {
-		this.each(function () { if (selector.call(this)) { elems.push(this); } });
-	} else {
-		this.each(function () { if (_(this).is(selector)) { elems.push(this); } });
-	}
+	typeof selector === 'function'
+		? this.each(function () { if (selector.call(this)) { elems.push(this); } })
+		: this.each(function () { if (_(this).is(selector)) { elems.push(this); } });
 	return _(elems);
 };

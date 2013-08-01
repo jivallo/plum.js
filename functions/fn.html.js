@@ -7,7 +7,7 @@
  * @return   object  Returns a Plum object
  */
 _.fn.html = function (content, outer) {
-	return this.length ? (content !== undefined
+	return this.length ? (content !== null && content !== undefined
 		? this.insert(content, 'replace')
 		: this[0].innerHTML) : this;
 };

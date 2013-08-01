@@ -8,7 +8,8 @@
  */
 _.parse = function (find, scope) {
 	scope = scope || document;
-	if (find === 'body') { return [ document.body ]; }
+	if (find === window || find === document) { return [ find ]; }
+	else if (find === 'body') { return [ document.body ]; }
 	else if (find === 'html') { return [ document.documentElement ]; }
 	else if (scope.querySelectorAll) {
 		try { return _.array(scope.querySelectorAll(find)); }
@@ -38,12 +39,19 @@ _.parse.match = {
 _.parse.adjacent = function (parentNode) {
 	var i = 0,
 		iLength = parentNode.length,
-		elements = [], 
+		j,
+		jLength,
+		elements = [],
 		node,
+		cNodes,
 		children;
 	for (; i < iLength; i++) {
 		node = parentNode[i];
-		children = _.array(node.parentNode.children);
+		children = [];
+		cNodes = node.parentNode.childNodes;
+		for (j = 0, jLength = cNodes.length; j < jLength; j++) {
+			cNodes[j].nodeType !== 3 && children.push(cNodes[j]);
+		}
 		children = children.slice(children.indexOf(node) + 1);
 		elements = elements.concat(children);
 	}
@@ -88,9 +96,9 @@ _.parse.children = function (parentNode) {
 		elements = [],
 		node;
 	for (; i < iLength; i++) {
-		if (!(node = parentNode[i].children)) { continue; }
+		if (!(node = parentNode[i].childNodes)) { continue; }
 		for (j = 0, jLength = node.length; j < jLength; j++) {
-			elements.push(node[j]);
+			node[j].nodeType !== 3 && elements.push(node[j]);
 		}
 	}
 	return elements;
@@ -111,10 +119,11 @@ _.parse.descendants = function (parentNode) {
 		elements = [],
 		node;
 	for (; i < iLength; i++) {
-		if (!(node = parentNode[i].children)) { continue; }
+		if (!(node = parentNode[i].childNodes)) { continue; }
 		for (j = 0, jLength = node.length; j < jLength; j++) {
+			if (node[j].nodeType === 3) { continue; }
 			elements.push(node[j]);
-			if (node[j].children.length) {
+			if (node[j].childNodes.length) {
 				elements = elements.concat(this.descendants([ node[j] ]));
 			}
 		}
@@ -133,9 +142,7 @@ _.parse.parent = function (childNode) {
 	var i = 0, iLength = childNode.length, elements = [], node;
 	for (; i < iLength; i++) {
 		node = childNode[i].parentNode;
-		if (node) {
-			elements.push(node);
-		}
+		node && elements.push(node);
 	}
 	return elements;
 };
@@ -154,9 +161,7 @@ _.parse.siblings = function (parentNode) {
 		node;
 	for (; i < iLength; i++) {
 		node = parentNode[i].nextElementSibling;
-		if (node) {
-			elements.push(node);
-		}
+		node && elements.push(node);
 	}
 	return elements;
 };
@@ -204,7 +209,7 @@ _.parse.find = function (find, scope, elems) {
 			case '+': search = 'siblings'; continue;
 			case '~': search = 'adjacent'; continue;
 			default:
-				if (_.parse[search]) { cxt = _.parse[search](loopElems); }
+				_.parse[search] && (cxt = _.parse[search](loopElems));
 				loopElems = [];
 				pseudoElems = [];
 				id = (match[1].match(regex.id) || [])[1];
@@ -220,7 +225,7 @@ _.parse.find = function (find, scope, elems) {
 				});
 				loop: for (i = 0, iLength = cxt.length; i < iLength; i++) {
 					elem = cxt[i];
-					if (!elem || elem.nodeName === '#text') { continue loop; }
+					if (!elem || elem.nodeType !== 1) { continue loop; }
 					// Check the element ID.
 					if (id && (!elem.attributes.id || elem.attributes.id.value !== id)) {
 						continue loop;

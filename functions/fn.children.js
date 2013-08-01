@@ -12,12 +12,11 @@ _.fn.children = function (find, deep) {
 		deep = find;
 		find = null;
 	}
-	this.each(function () {
-		scope = _.parse[deep ? 'descendants' : 'children']([ this ]);
+	deep = /^(?:ancestors|parent)$/.test(deep) ? deep : (deep ? 'descendants' : 'children');
+	_.parse[deep] && this.each(function () {
+		scope = _.parse[deep]([ this ]);
 		scope = find ? _(find, scope) : scope;
 		scope.each(function () { elems.push(this); });
 	});
-	elems = _(elems);
-	elems.selector = this.selector + (deep ? ' ' : ' > ') + (find ? find : '*');
-	return elems;
+	return _(elems);
 };
