@@ -1,7 +1,7 @@
 _.sp = (function () {
 
 	_.hidden.innerHTML = '<div></div>';
-	var html = _.hidden.children[1].firstChild;
+	var html = _.hidden.childNodes[0];
 
 	return {
 		// Check audio support for various audio types.
@@ -52,7 +52,15 @@ _.sp = (function () {
 		file: !!(window.File && window.FileList),
 
 		// Adobe Flash detection.
-		flash: !!navigator.mimeTypes['application/x-shockwave-flash'],
+		flash: (function () {
+			if (navigator.plugins && navigator.plugins.length) {
+				return !!navigator.mimeTypes['application/x-shockwave-flash'];
+			}
+			try {
+				return !!(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'));
+			} catch (e) {}
+			return false;
+		}()),
 
 		// HTML5 history support.
 		history: !!(window.history && history.pushState),
@@ -72,8 +80,12 @@ _.sp = (function () {
 				i = 0,
 				l = types.length;
 			for (; i < l; i++) {
-				field.type = types[i];
-				support[types[i].toCamelCase()] = field.type === types[i];
+				try {
+					field.type = types[i];
+					support[types[i].toCamelCase()] = field.type === types[i];
+				} catch (e) {
+					support[types[i].toCamelCase()] = false;
+				}
 			}
 			return support;
 		}('color date datetime datetime-local email month number range search tel time url week'.split(' '))),
@@ -98,7 +110,8 @@ _.sp = (function () {
 			support.indexedDb = !!(window.indexdED = window.indexedDB
 				|| window.mozIndexedDB
 				|| window.webkitIndexedDB
-				|| msIndexedDB)
+				|| window.msIndexedDB
+				|| null)
 				&& !!(window.IDBTransaction = window.IDBTransaction
 				|| window.webkitIDBTTransaction
 				|| window.msIDBTransaction)

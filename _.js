@@ -14,21 +14,20 @@ var _ = function (find, scope) {
 		if (find === window || (find.documentElement && (find = find.documentElement))) {
 			elem = [ find ];
 			find = '';
+		}
 
-		} else if (typeof find === 'string') {
+		// Looking for _('<element>') _('selector')
+		else if (typeof find === 'string') {
 			find = find.trim();
-			// Looking for _('<element>')
 			if (find[0] === '<') {
 				if (/^<!doctype.+?>/i.test(find)) {
 					_.hidden.innerHTML = find;
 					return _(_.hidden);
 				} else if ((find = find.replace(/^<!doctype.+?>/i, ''))) {
 					_.hidden.innerHTML = find;
-					find = _.hidden.children;
-					return _(find[1].innerHTML ? find[1] : find[0]).children();
+					return _(_.array(_.hidden.childNodes));
 				}
 			}
-			// Looking for _('#selector')
 			if (find) {
 				// If the scope is a DOM node, get all descendents of that scope.
 				if (scope && (scope.nodeName || scope instanceof _) && scope !== window && scope !== document) {
@@ -37,9 +36,32 @@ var _ = function (find, scope) {
 				// Search for DOM nodes using the "find" selector and scope.
 				elem = _.parse(find, scope);
 			}
+		}
 
-		// Looking for _([]) _(Plum)
-		} else if (find instanceof _ || find instanceof Array) {
+		// Looking for _(element)
+		else if (find.nodeType && find.nodeType !== 3) {
+			elem = [ find ];
+			find = '';
+			scope instanceof Array
+				&& elem.length === 1
+				&& scope.indexOf(elem[0]) < 0
+				&& (elem = []);
+		}
+
+		// Looking for _(function () {})
+		else if (typeof find === 'function') {
+			if (/^(?:complete|interactive|loaded)$/.test(document.readyState)) {
+				find.call(window, _);
+			} else {
+				document.addEventListener('DOMContentLoaded', find.bind(window, _), false);
+			}
+			return this;
+
+		}
+
+		// Looking for _(Plum) _([])
+		else if (find && typeof find === 'object') {
+			find = find instanceof _ || find instanceof Array ? find : _.array(find);
 			arry = function (find) {
 				find.each(function () {
 					if (this instanceof _) arry(this);
@@ -48,24 +70,8 @@ var _ = function (find, scope) {
 			};
 			arry(find);
 			find = '';
-
-		// Looking for _(element)
-		} else if (find.nodeType && find.nodeType !== 3) {
-			elem = [ find ];
-			find = '';
-			scope instanceof Array
-				&& elem.length === 1
-				&& scope.indexOf(elem[0]) < 0
-				&& (elem = []);
-
-		// Looking for _(function () {})
-		} else if (typeof find === 'function') {
-			document.readyState
-				? find(_)
-				: document.addEventListener('DOMContentLoaded', find.bind(window, _), false);
-			return this;
-
 		}
+
 		elem = _.unique(_.array(elem));
 		this.length = elem.length;
 		for (; i < this.length; i++) {
@@ -77,7 +83,7 @@ var _ = function (find, scope) {
 	return this;
 };
 
-_.hidden = document.createElement('html');
+_.hidden = document.createElement('body');
 _.instance = 'PlumJS_' + (new Date()).getTime();
 _.props = {
 	data: {},

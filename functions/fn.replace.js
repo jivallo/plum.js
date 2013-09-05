@@ -6,12 +6,7 @@
  * @return  object  Returns a Plum object
  */
 _.fn.replace = function (html) {
-	html = html instanceof _ ? html : _(html);
-	this.each(function () {
-		var elems = html,
-			node = _(elems.slice(0, 1)[0]);
-		this.parentNode && this.parentNode.replaceChild(node[0], this);
-		node.insert(elems, 'after');
-	});
+	html = _(html);
+	this.each(function () { this.parentNode && this.parentNode.replaceChild(html[0], this); });
 	return html;
 };

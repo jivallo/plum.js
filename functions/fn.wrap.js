@@ -7,18 +7,16 @@
  */
 _.fn.wrap = function (html) {
 	var temp;
-	if (html instanceof Object && html.selector !== undefined) {
+	if (html instanceof _ && html.selector !== undefined) {
 		temp = html[0];
 	} else if (html.charAt(0) === '<') {
 		_.hidden.innerHTML = html;
-		temp = _.hidden.children[1].firstChild;
+		temp = _.hidden.childNodes[0];
 	}
 	return this.each(function () {
 		html = temp.cloneNode(true);
 		this.parentNode.insertBefore(html, this);
-		while (html && html.children.length) {
-			html = html.childNodes[0];
-		}
+		while (html.childNodes[0] && (html = html.childNodes[0]));
 		html.appendChild(this);
 	}).fire('html.wrap', html);
 };

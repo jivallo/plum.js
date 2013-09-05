@@ -10,68 +10,71 @@
  */
 _.fn.insert = function (html, position) {
 	var elem = this,
-		fire = [],
+		orig,
 		node,
 		func,
 		parent,
-		str = false;
+		i,
+		l;
 	if (position === 'into') {
 		_(html).insert(elem);
 		return elem;
 	}
-	if (html instanceof Object && html.nodeName) {
-		html = [ html ];
-	} else if (typeof html === 'string' || typeof html === 'number') {
-		str = true;
+	if (typeof html === 'string' || typeof html === 'number') {
 		html += '';
-		if (elem.is('style')) {
+		orig = html;
+		if (elem.is('style') && !(
+			position === 'after'
+			|| position === 'before'
+			|| position === 'replace'
+		)) {
 			html = [ document.createTextNode(html) ];
-		} else if (~html.indexOf('<') && ~html.indexOf('>')) {
-			_.hidden.innerHTML = html;
-			html = _.hidden.children;
-			html = _.array(html[html[0].childNodes.length ? 0 : 1].childNodes);
 		} else {
 			_.hidden.innerHTML = html;
-			html = _.hidden.children[1].innerHTML;
-			html = [ document.createTextNode(html) ];
+			html = _.array(_.hidden.childNodes);
 		}
 	}
-	if (html) {
-		elem.each(function () {
-			switch (position) {
-				case 'after':
-					node = this.nextElementSibling;
-					func = node === null ? 'appendChild' : 'insertBefore';
-					parent = this.parentNode;
-					break;
-				case 'before':
-					node = this;
-					func = 'insertBefore';
-					parent = this.parentNode;
-					break;
-				case 'prepend':
-					node = this.firstChild;
-					func = node === null ? 'appendChild' : 'insertBefore';
-					parent = this;
-					break;
-				case 'replace':
-					this.innerHTML = '';
-				case 'append':
-				default:
+	html = _(html);
+	html.length && elem.each(function () {
+		switch (position) {
+			case 'after': {
+				node = this.nextElementSibling;
+				func = node === null ? 'appendChild' : 'insertBefore';
+				parent = this.parentNode;
+				break;
+			}
+			case 'before': {
+				node = this;
+				func = 'insertBefore';
+				parent = this.parentNode;
+				break;
+			}
+			case 'prepend': {
+				node = this.firstChild;
+				func = node === null ? 'appendChild' : 'insertBefore';
+				parent = this;
+				break;
+			}
+			case 'replace':
+			case 'append':
+			default: {
+				if (position === 'replace' && orig) {
+					this.innerHTML = orig;
+				} else {
+					position === 'replace' && (this.innerHTML = '');
+					position = 'append';
 					node = null;
 					func = 'appendChild';
 					parent = this;
-					break;
+				}
+				break;
 			}
-			html.each(function () {
-				try {
-					var ins = str ? this.cloneNode(true) : this;
-					parent[func](ins, node);
-					fire.push(ins);
-				} catch (e) {}
-			});
-			elem.fire('html.' + (position || 'append'));
+		}
+		position !== 'replace' && html.each(function (elem) {
+			elem = this.nodeName.toLowerCase() === '#text' ? this.cloneNode() : this;
+			parent && parent[func](elem, node);
 		});
-	}
+		elem.fire('html.' + position);
+	});
 	return elem;
 };

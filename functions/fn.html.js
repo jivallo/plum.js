@@ -9,5 +9,5 @@
 _.fn.html = function (content, outer) {
 	return this.length ? (content !== null && content !== undefined
 		? this.insert(content, 'replace')
-		: this[0].innerHTML) : this;
+		: this[0][(outer ? 'outer' : 'inner') + 'HTML']) : this;
 };

@@ -98,7 +98,7 @@ _.parse.children = function (parentNode) {
 	for (; i < iLength; i++) {
 		if (!(node = parentNode[i].childNodes)) { continue; }
 		for (j = 0, jLength = node.length; j < jLength; j++) {
-			node[j].nodeType !== 3 && elements.push(node[j]);
+			node[j].nodeType === 1 && elements.push(node[j]);
 		}
 	}
 	return elements;

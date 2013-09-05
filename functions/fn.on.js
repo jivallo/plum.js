@@ -19,7 +19,13 @@ _.fn.on = function (evnt, trgt, call, once) {
 		evnt = {};
 		call = typeof trgt === 'function' ? trgt : call;
 		trgt = typeof trgt !== 'string' ? null : trgt;
-		type.split(/\s+/).each(function (i, e) { evnt[e] = call; });
+		type = type
+			.replace(/(?:^|\s)scroll(?:\s|$)/, 'DOMMouseScroll mousewheel gesturechange')
+			.replace(/(?:^|\s)mousedown(?:\s|$)/, 'touchstart mousedown')
+			.replace(/(?:^|\s)mouseup(?:\s|$)/, 'touchend mouseup')
+			.replace(/(?:^|\s)click(?:\s|$)/, 'tap click')
+			.split(/\s+/);
+		type.each(function (i, e) { evnt[e] = call; });
 	}
 	return this.each(function (i) {
 		var elem = this, evts = elem.plum.events;
@@ -35,6 +41,11 @@ _.fn.on = function (evnt, trgt, call, once) {
 						var trgt = fn[1] === elem ? elem : _(event.target || elem.srcElement).nearest(fn[1])[0];
 						if (trgt) {
 							event.originalTarget || (event.originalTarget = event.srcElement);
+							event.name = event.type === 'DOMMouseScroll' ? 'mousewheel'
+								: event.type === 'touchstart' ? 'mousedown'
+								: event.type === 'touchend' ? 'mouseup'
+								: event.type === 'tap' ? 'click'
+								: event.type;
 							if (fn[0].call(trgt, event) === false) {
 								event.preventDefault();
 								event.stopPropagation();
@@ -43,7 +54,7 @@ _.fn.on = function (evnt, trgt, call, once) {
 							}
 						}
 					});
-					_(elem).ignore(callback, trgt || elem, fn);
+					once && elem.removeEventListener(i, fn, false);
 				// Remove the event if no callback functions exist.
 				} else {
 					elem.removeEventListener(i, fn, false);

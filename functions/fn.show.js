@@ -9,7 +9,7 @@ _.fn.show = function () {
 	return this.style({ display: '' }).each(function () {
 		var elem = _(this);
 		if (elem.style('display') === 'none') {
-			elem.style({ display: block.test(this.nodeName.toLowerCase()) ? 'block' : 'inline' });
+			elem.style({ display: block.test(this.nodeName.toLowerCase()) ? 'block' : 'inline', opacity: 1 });
 		}
 	});
 };

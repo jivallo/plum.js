@@ -7,7 +7,12 @@
  */
 _.fn.fire = function (event) {
 	var args = _.array(arguments).slice(1);
-	event = event.split(/\s+/);
+	event = event
+		.replace(/(?:^|\s)scroll(?:\s|$)/, 'DOMMouseScroll mousewheel')
+		.replace(/(?:^|\s)mousedown(?:\s|$)/, 'touchstart mousedown')
+		.replace(/(?:^|\s)mouseup(?:\s|$)/, 'touchend mouseup')
+		.replace(/(?:^|\s)click(?:\s|$)/, 'tap click')
+		.split(/\s+/);
 	return this.each(function () {
 		var elem = this;
 		event.each(function (i, event) {
