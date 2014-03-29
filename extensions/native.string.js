@@ -96,7 +96,7 @@ String.prototype.cookie = function (value, expire, path) {
 	if (value !== undefined) {
 		if (expire !== null) {
 			date = new Date();
-			date.setDate(date.getDate() + expire * 1000);
+			date.setTime(date.getTime() + expire * 1000);
 			date = date.toUTCString();
 		}
 		document.cookie = this + '='

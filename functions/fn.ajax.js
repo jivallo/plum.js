@@ -14,6 +14,7 @@ _.ajax = (function () {
 		method: 'GET',
 		params: {},
 		sync: false,
+		timeout: 0,
 		type: null,
 		url: window.location.href,
 		before: function () {},
@@ -61,8 +62,8 @@ _.ajax = (function () {
 				text = null;
 			}
 			cTxt = text && typeof text === 'object' && !(text instanceof _) ? _.copy(text) : text;
-			opts.complete.call(elem[0], text, xhr);
-			Events.complete && Events.complete.each(function (i, func) { func.call(elem[0], cTxt, xhr); });
+			opts.complete.call(elem[0], text, xhr, opts);
+			Events.complete && Events.complete.each(function (i, func) { func.call(elem[0], cTxt, xhr, opts); });
 		},
 
 		/**
@@ -101,9 +102,9 @@ _.ajax = (function () {
 			var xhr = new XMLHttpRequest();
 			xhr.open(opts.method, opts.url, !opts.sync);
 			this.headers(xhr, opts.headers, opts.method);
-			if (opts.before(xhr) !== false &&
+			if (opts.before(xhr, opts) !== false &&
 				(Events.before && Events.before.each(function (i, func) {
-					func = func.call(elem, xhr);
+					func = func.call(elem, xhr, opts);
 					return func === false ? false : true;
 				})) !== false
 			) {
@@ -117,8 +118,17 @@ _.ajax = (function () {
 					xhr.upload.addEventListener('progress', opts.progress, false);
 					xhr.upload.addEventListener('load', opts.progress, false);
 				}
-				xhr.onreadystatechange = function () {
-					xhr.readyState === 4 && this.complete(opts, xhr);
+				xhr.timeout = opts.timeout;
+				xhr.onerror = function () {
+					Events.error && Events.error.each(function (i, func) { func.call(elem, xhr); });
+					opts.error && opts.error.call(elem, 'error', xhr);
+				};
+				xhr.ontimeout = function () {
+					Events.timeout && Events.timeout.each(function (i, func) { func.call(elem, xhr); });
+					opts.error && opts.error.call(elem, 'timeout', xhr);
+				};
+				xhr.onload = function () {
+					this.complete(opts, xhr);
 				}.bind(this);
 				xhr.send(opts.method === 'post' ? opts.params : null);
 			}
@@ -136,23 +146,23 @@ _.ajax = (function () {
 			var i,
 				url = location,
 				isLocal = new RegExp('^(https?://(?:[^/]+\\.)?'
-					+ (url.hostname + (url.post ? ':' + url.port : '')).replace(/\./g, '\\.')
+					+ (url.hostname + (url.port ? ':' + url.port : '')).replace(/\./g, '\\.')
 					+ ')?(?:/|$)'),
 				parse,
 				param = opts.params instanceof File ? opts.params : undefined;
-	
+
 			// Handler for submitting AJAX forms.
 			if ((elem.nodeName || elem instanceof _) && (elem = _(elem)) && elem.is('form')) {
 				opts.url = elem.attr('action');
 				opts.method = elem.attr('method') || 'get';
 				opts.params = param || elem.encode();
 			}
-	
+
 			// Get all options.
 			opts = _.merge(_.copy(Options), opts);
 			opts.elem = elem[0] || this;
 			opts.method = opts.method.toLowerCase();
-	
+
 			// Check if the URL is remote, and if it is, attempt to load the
 			// content via JSONP.
 			if (/^(?:get|post)$/.test(opts.method)
@@ -165,7 +175,7 @@ _.ajax = (function () {
 				parse.src = opts.url.replace('=?', '=' + i);
 				return document.body.appendChild(parse);
 			}
-	
+
 			// Finish building options.
 			opts.params = param || this.params(opts.params);
 			if (~(i = opts.url.indexOf(' '))) {

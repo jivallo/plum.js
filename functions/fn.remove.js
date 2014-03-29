@@ -9,7 +9,7 @@ _.fn.remove = function () {
 		var parent = _(this).parent();
 		if (parent.length) {
 			this.parentNode.removeChild(this);
-			parent.fire('html');
+			parent.fire('html.remove');
 		}
 	});
 };
